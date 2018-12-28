@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="BaseFolder" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">e:/</Value>
+      <Value Profile="(Default)">z:\!!!ОБЩАЯ!!!\Сертификаты\</Value>
     </Setting>
   </Settings>
 </SettingsFile>

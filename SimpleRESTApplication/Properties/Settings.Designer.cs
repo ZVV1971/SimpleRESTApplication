@@ -25,7 +25,7 @@ namespace SimpleRESTApplication.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("e:/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("z:\\!!!ОБЩАЯ!!!\\Сертификаты\\")]
         public string BaseFolder {
             get {
                 return ((string)(this["BaseFolder"]));
