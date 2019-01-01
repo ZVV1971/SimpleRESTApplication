@@ -96,7 +96,7 @@ namespace SimpleRESTApplication.Controllers
             //Taganrog ceritificates detection
             if (str[0].Length == 8 && str[0].All((x) => x >= '0' && x <= '9'))
                 realPath = HostingEnvironment.MapPath("/Certificates") + @"\20" + str[0][1] + str[0][2] + @"\ТМЗ\" + str[0] + ".pdf";
-            else //non-TMZ certificate have to look for the dat
+            else //non-TMZ certificate have to look for the date
             {
                 Match mtch = Regex.Match(str[1], pattern, RegexOptions.IgnoreCase);
                 realPath = HostingEnvironment.MapPath("/Certificates") + ((mtch.Captures[0].Value.Length == 2) ?
