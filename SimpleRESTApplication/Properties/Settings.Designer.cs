@@ -25,10 +25,11 @@ namespace SimpleRESTApplication.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("z:\\!!!ОБЩАЯ!!!\\Сертификаты\\")]
-        public string BaseFolder {
+        [global::System.Configuration.DefaultSettingValueAttribute("This is the service for getting KML certificates. Please, use it as follows: ~/ap" +
+            "i/certificates/?id=certificatenamme+date.")]
+        public string CertificatesGetTestResponse {
             get {
-                return ((string)(this["BaseFolder"]));
+                return ((string)(this["CertificatesGetTestResponse"]));
             }
         }
     }

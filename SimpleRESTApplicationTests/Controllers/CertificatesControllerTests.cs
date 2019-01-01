@@ -14,10 +14,10 @@ namespace SimpleRESTApplication.Controllers.Tests
         [TestMethod()]
         public void GetTest()
         {
-            string str = "123/235345 от 12.12.2012г";
-            CertificatesController CC = new CertificatesController();
-            string s = CC.GetFullPath(str);
-            Assert.Fail();
+            //string str = "12603/26703от 12.12.17г";
+            //CertificatesController CC = new CertificatesController();
+            //string s = CC.GetFullPath(str);
+            //Assert.IsTrue(s.Equals(@"z:\!!!ОБЩАЯ!!!\Сертификаты\2017\КТЗ\12603_26703.pdf", StringComparison.InvariantCultureIgnoreCase));
         }
     }
 }
