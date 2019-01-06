@@ -8,6 +8,10 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using SimpleRESTApplication.Alumni;
+using System.Web;
+using Newtonsoft.Json;
+using Newtonsoft;
+using Newtonsoft.Json.Linq;
 
 namespace SimpleRESTApplication.Controllers
 {
@@ -28,7 +32,7 @@ namespace SimpleRESTApplication.Controllers
                 try
                 {
                     byte[] fileBytes = File.ReadAllBytes(file_path);
-                    using (MemoryStream dataStream = new MemoryStream(fileBytes), 
+                    using (MemoryStream dataStream = new MemoryStream(fileBytes),
                                         outputStream = new MemoryStream())
                     {
                         httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK);
@@ -38,7 +42,7 @@ namespace SimpleRESTApplication.Controllers
                         }
                         else
                         {
-                            if (name.Equals("")) throw new ArgumentNullException("name", 
+                            if (name.Equals("")) throw new ArgumentNullException("name",
                                 "Name cannot be empty when position provided");
                             PdfInscriptor pdf = new PdfInscriptor(dataStream);
                             pdf.MakeInscription("Копия верна" + Environment.NewLine + pos
@@ -70,7 +74,7 @@ namespace SimpleRESTApplication.Controllers
             return httpResponseMessage;
         }
 
-        [HttpGet]  
+        [HttpGet]
         public HttpResponseMessage Get()
         {
             HttpResponseMessage res = null;
@@ -85,6 +89,31 @@ namespace SimpleRESTApplication.Controllers
             {
                 return new HttpResponseMessage(HttpStatusCode.NotFound);
             }
+        }
+
+        [HttpPost]
+        public HttpResponseMessage Post(HttpRequestMessage id)
+        {
+            HttpResponseMessage httpResponseMessage = new HttpResponseMessage();
+            if (id == null)
+            {
+                httpResponseMessage.Content = new StringContent("Empty id");
+                httpResponseMessage.StatusCode = HttpStatusCode.BadRequest;
+            }
+            else
+            {
+                var id_json = id.Content.ReadAsStringAsync();
+                JObject jObject = JObject.Parse(id_json.Result);
+                if (jObject.Children().Count() == 3 && jObject.ContainsKey("id"))
+                    if(jObject.ContainsKey("name") && jObject.ContainsKey("pos"))
+                    {
+                        return Get(id: jObject["id"].ToString(),
+                                pos: jObject["pos"].ToString(),
+                                name: jObject["name"].ToString());
+                    }
+                return Get(id: jObject["id"].ToString());
+            }
+            return httpResponseMessage;
         }
 
         /// <summary>
