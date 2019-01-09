@@ -1,29 +1,28 @@
-﻿using System.IO;
-using System.Linq;
+﻿using Newtonsoft.Json.Linq;
+using SimpleRESTApplication.Alumni;
+using SimpleRESTApplication.Models;
 using System;
-using System.Web.Http;
-using System.Web.Hosting;
-using System.Net.Http;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
-using SimpleRESTApplication.Alumni;
-using System.Web;
-using Newtonsoft.Json;
-using Newtonsoft;
-using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using System.Web.Hosting;
+using System.Web.Http;
 
 namespace SimpleRESTApplication.Controllers
 {
     public class CertificatesController : ApiController
     {
         [HttpGet]
+        [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
         public HttpResponseMessage Get(string id, string pos = "", string name = "")
         {
             HttpResponseMessage httpResponseMessage = null;
 
             Logger.WriteToLog("got id " + id + " - " + DateTime.Now.ToString());
-            //Путь к файлу
             bool needToRotate;
             string file_path = GetFullPath(ref id, out needToRotate);
 
@@ -36,14 +35,14 @@ namespace SimpleRESTApplication.Controllers
                                         outputStream = new MemoryStream())
                     {
                         httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK);
-                        if (pos.Equals(""))
+                        if (pos==null || pos.Equals(""))
                         {
                             httpResponseMessage.Content = new ByteArrayContent(dataStream.ToArray());
                         }
                         else
                         {
-                            if (name.Equals("")) throw new ArgumentNullException("name",
-                                "Name cannot be empty when position provided");
+                            if (name == null || name.Equals("")) throw new ArgumentNullException("name",
+                                    "Name cannot be empty when position provided");
                             PdfInscriptor pdf = new PdfInscriptor(dataStream);
                             pdf.MakeInscription("Копия верна" + Environment.NewLine + pos
                                     + Environment.NewLine + Environment.NewLine + name, needToRotate);
@@ -60,7 +59,9 @@ namespace SimpleRESTApplication.Controllers
                 catch (Exception ex)
                 {
                     httpResponseMessage = Request.CreateResponse(HttpStatusCode.NotFound);
+#if DEBUG
                     httpResponseMessage.Content = new StringContent(ex.Message);
+#endif
                     return httpResponseMessage;
                 }
             }
@@ -75,6 +76,8 @@ namespace SimpleRESTApplication.Controllers
         }
 
         [HttpGet]
+        // need to add it to allow routing even if content type is not present since form-urlencoded is by default
+        [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
         public HttpResponseMessage Get()
         {
             HttpResponseMessage res = null;
@@ -91,7 +94,14 @@ namespace SimpleRESTApplication.Controllers
             }
         }
 
+        [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
         [HttpPost]
+        public HttpResponseMessage Post([FromBody] InscriptionData id)
+        {
+            return Get(id: id.id, pos: id.pos, name: id.name);
+        }
+
+        [ContentTypeRoute("api/certificates", "application/json")]
         public HttpResponseMessage Post(HttpRequestMessage id)
         {
             HttpResponseMessage httpResponseMessage = new HttpResponseMessage();
@@ -102,16 +112,16 @@ namespace SimpleRESTApplication.Controllers
             }
             else
             {
-                var id_json = id.Content.ReadAsStringAsync();
-                JObject jObject = JObject.Parse(id_json.Result);
-                if (jObject.Children().Count() == 3 && jObject.ContainsKey("id"))
-                    if(jObject.ContainsKey("name") && jObject.ContainsKey("pos"))
-                    {
-                        return Get(id: jObject["id"].ToString(),
-                                pos: jObject["pos"].ToString(),
-                                name: jObject["name"].ToString());
-                    }
-                return Get(id: jObject["id"].ToString());
+                Task<string> id_json = id.Content.ReadAsStringAsync();
+                try
+                {
+                    InscriptionData inscr = JObject.Parse(id_json.Result).ToObject<InscriptionData>();
+                    return Post(inscr);
+                }
+                catch
+                {
+                    httpResponseMessage.StatusCode = HttpStatusCode.BadRequest;
+                }
             }
             return httpResponseMessage;
         }
@@ -120,6 +130,7 @@ namespace SimpleRESTApplication.Controllers
         /// Returns a full absolute path to the file representing requested certificate
         /// </summary>
         /// <param name="fileName">a name of the certificate</param>
+        /// <param name="needToRotate">necessity to rotate defined on the base of the ceritificate type</param>
         /// <returns>absolute path to the certificate file</returns>
         private string GetFullPath(ref string fileName, out bool needToRotate)
         {
@@ -128,31 +139,32 @@ namespace SimpleRESTApplication.Controllers
             needToRotate = true;
            
             //create aray of separators
-            char[] sep = new char[] { (char)0x20, (char)0x09, 'o', 'O', 'о', 'О' };
-           
+            char[] separators = new char[] { (char)0x20, (char)0x09, 'o', 'O', 'о', 'О' };
+
             //split string to separate certificate number from the date
-            string[] str = fileName.Split(separator: sep,
+            string[] partsOfID = fileName.Split(separator: separators,
                                           options: StringSplitOptions.RemoveEmptyEntries,
-                                          count:2);//do not need more than 2 parts
+                                          count: 2);//do not need more than 2 parts
             //in case no delimiters met in the string
-            if (str.Count() != 2) { fileName = "error at splitting";  return null; }
+            if (partsOfID.Count() != 2) { fileName = "error at splitting";  return null; }
 
             //check if certificate is 8 characters long and digits only
             //Taganrog ceritificates detection
-            if (str[0].Length == 8 && str[0].All((x) => x >= '0' && x <= '9'))
-                realPath = HostingEnvironment.MapPath("/Certificates") + @"\20" + str[0][1] + str[0][2] 
-                        + @"\ТМЗ\" + str[0] + ".pdf";
+            if (partsOfID[0].Length == 8 && partsOfID[0].All((x) => x >= '0' && x <= '9'))
+                realPath = HostingEnvironment.MapPath("/Certificates") + @"\20" + partsOfID[0][1] + partsOfID[0][2] 
+                        + @"\ТМЗ\" + partsOfID[0] + ".pdf";
             //non-TMZ certificate 
-            else if (str[0].Contains('/')) //for the present time the only attribute of the KTZ certificate
+            else if (partsOfID[0].Contains('/')) //for the present time the only attribute of the KTZ certificate
             {
                 //KTZ -- have to look for the date
-                Match mtch = Regex.Match(str[1], pattern, RegexOptions.IgnoreCase);
+                Match mtch = Regex.Match(partsOfID[1], pattern, RegexOptions.IgnoreCase);
                 try // in case wrong year is provided (neither 2 nor 4 digits)
                 {
                     realPath = HostingEnvironment.MapPath("/Certificates") + ((mtch.Captures[0].Value.Length == 2) ?
                         @"\20" + mtch.Captures[0].Value + @"\КТЗ\" : @"\" + mtch.Captures[0].Value + @"\КТЗ\")
                         //replacing is obligatory to comply with OS file naming rules
-                        + str[0].Replace('/', '_') + ".pdf";
+                        + partsOfID[0].Replace('/', '_') + ".pdf";
+                    fileName = fileName.Replace('/', '_');
                     needToRotate = false;
                 }
                 catch { }

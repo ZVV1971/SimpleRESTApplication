@@ -265,3 +265,5 @@ __pycache__/
 *.xlsm
 #custom log files -- strange but GIT considers russian letter in UTF-8 as two letters in ACSII
 /SimpleRESTApplication/?????[0-9][0-9][0-9][0-9][0-9][0-9]
+/SimpleRESTApplication/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]
+/sample curl POST-request.txt
