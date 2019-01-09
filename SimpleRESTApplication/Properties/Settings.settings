@@ -2,8 +2,12 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="SimpleRESTApplication.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
+    <Setting Name="CertificatesPOSTx_form_urlencodedExample" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">id=41800110ot12.12.2018&amp;pos=Director&amp;name=Nemo</Value>
+    </Setting>
     <Setting Name="CertificatesGetTestResponse" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">This is the service for getting KML certificates. Please, use it as follows: ~/api/certificates/?id=certificatenamme+date.</Value>
+      <Value Profile="(Default)">This is the service for getting KML certificates. 
+Please, use it as follows: ~/api/certificates/?id=certificatenamme+date.</Value>
     </Setting>
   </Settings>
 </SettingsFile>
