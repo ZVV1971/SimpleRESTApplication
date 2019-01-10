@@ -14,10 +14,13 @@ using System.Web.Http;
 
 namespace SimpleRESTApplication.Controllers
 {
+    /// <summary>
+    /// Provides method to get certificates PDF with/without inscription
+    /// </summary>
     public class CertificatesController : ApiController
     {
         [HttpGet]
-        [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
+        [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]  // need to add it to allow routing even if content type is not present since form-urlencoded is by default
         public HttpResponseMessage Get(string id, string pos = "", string name = "")
         {
             HttpResponseMessage httpResponseMessage = null;
@@ -35,11 +38,7 @@ namespace SimpleRESTApplication.Controllers
                                         outputStream = new MemoryStream())
                     {
                         httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK);
-                        if (pos==null || pos.Equals(""))
-                        {
-                            httpResponseMessage.Content = new ByteArrayContent(dataStream.ToArray());
-                        }
-                        else
+                        if (pos != null && !pos.Equals(""))
                         {
                             if (name == null || name.Equals("")) throw new ArgumentNullException("name",
                                     "Name cannot be empty when position provided");
@@ -48,6 +47,10 @@ namespace SimpleRESTApplication.Controllers
                                     + Environment.NewLine + Environment.NewLine + name, needToRotate);
                             pdf.document.Save(outputStream, false);
                             httpResponseMessage.Content = new ByteArrayContent(outputStream.ToArray());
+                        }
+                        else
+                        {
+                            httpResponseMessage.Content = new ByteArrayContent(dataStream.ToArray());
                         }
                     }
                     httpResponseMessage.Content.Headers.ContentDisposition =
@@ -75,8 +78,11 @@ namespace SimpleRESTApplication.Controllers
             return httpResponseMessage;
         }
 
+        /// <summary>
+        /// Returns welcome message. For test purproses only.
+        /// </summary>
+        /// <returns><see cref="HttpResponseMessage"/></returns>
         [HttpGet]
-        // need to add it to allow routing even if content type is not present since form-urlencoded is by default
         [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
         public HttpResponseMessage Get()
         {
@@ -94,6 +100,11 @@ namespace SimpleRESTApplication.Controllers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
         [HttpPost]
         public HttpResponseMessage Post([FromBody] InscriptionData id)
@@ -101,6 +112,11 @@ namespace SimpleRESTApplication.Controllers
             return Get(id: id.id, pos: id.pos, name: id.name);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns><see cref="HttpResponseMessage"/></returns>
         [ContentTypeRoute("api/certificates", "application/json")]
         public HttpResponseMessage Post(HttpRequestMessage id)
         {
@@ -129,8 +145,8 @@ namespace SimpleRESTApplication.Controllers
         /// <summary>
         /// Returns a full absolute path to the file representing requested certificate
         /// </summary>
-        /// <param name="fileName">a name of the certificate</param>
-        /// <param name="needToRotate">necessity to rotate defined on the base of the ceritificate type</param>
+        /// <param name="fileName">a name of the certificate: <see cref="String"/></param>
+        /// <param name="needToRotate">necessity to rotate defined on the base of the ceritificate type: <see cref="Boolean"/></param>
         /// <returns>absolute path to the certificate file</returns>
         private string GetFullPath(ref string fileName, out bool needToRotate)
         {

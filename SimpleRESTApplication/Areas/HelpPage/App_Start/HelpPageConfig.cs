@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Web;
 using System.Web.Http;
+using SimpleRESTApplication.Models;
 #if Handle_PageResultOfT
 using System.Web.Http.OData;
 #endif
@@ -58,6 +59,12 @@ namespace SimpleRESTApplication.Areas.HelpPage
             config.SetSampleForMediaType(
                 new TextSample("Binary JSON content. See http://bsonspec.org for details."),
                 new MediaTypeHeaderValue("application/bson"));
+            try
+            {
+                config.SetSampleForType(Properties.Settings.Default.CertificatesPOSTx_form_urlencodedExample,
+                    new MediaTypeHeaderValue("application/x-www-form-urlencoded"), typeof(InscriptionData));
+            }
+            catch { }
 
             //// Uncomment the following to use "[0]=foo&[1]=bar" directly as the sample for all actions that support form URL encoded format
             //// and have IEnumerable<string> as the body parameter or return type.
