@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Text;
 using System.Net.Http;
 using System.Web.Http.Routing;
 
@@ -14,7 +15,7 @@ namespace SimpleRESTApplication.Alumni
     /// Adding a Constraint to the standard Route attribute. 
     /// This evaluates the request’s Content-Type and compares it to the method’s Content-Type constraint. 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple =true, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
     public class ContentTypeRouteAttribute : RouteFactoryAttribute
     {
         public string ContentType { get; private set; }
@@ -57,7 +58,7 @@ namespace SimpleRESTApplication.Alumni
             {
                 IEnumerable<string> headerValues;
                 if (request.Content.Headers.TryGetValues("Content-Type", out headerValues) && headerValues.Count() == 1)
-                    return headerValues.First();
+                    return request.Content.Headers.ContentType.MediaType;
                 else
                     return "application/x-www-form-urlencoded";
             }

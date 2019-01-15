@@ -101,9 +101,9 @@ namespace SimpleRESTApplication.Controllers
         }
 
         /// <summary>
-        /// 
+        /// Gets data from the POST body as ww-form-urlencoded
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">x-ww-form-urlencoded request</param>
         /// <returns></returns>
         [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]
         [HttpPost]
@@ -113,10 +113,11 @@ namespace SimpleRESTApplication.Controllers
         }
 
         /// <summary>
-        /// 
+        /// Gets data POSTed as JSON
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">JSON-formatted request</param>
         /// <returns><see cref="HttpResponseMessage"/></returns>
+        [ContentTypeRoute("api/certificates", "multipart/form-data")]
         [ContentTypeRoute("api/certificates", "application/json")]
         public HttpResponseMessage Post(HttpRequestMessage id)
         {
@@ -129,14 +130,32 @@ namespace SimpleRESTApplication.Controllers
             else
             {
                 Task<string> id_json = id.Content.ReadAsStringAsync();
-                try
+                switch (id.Content.Headers.ContentType.MediaType)
                 {
-                    InscriptionData inscr = JObject.Parse(id_json.Result).ToObject<InscriptionData>();
-                    return Post(inscr);
-                }
-                catch
-                {
-                    httpResponseMessage.StatusCode = HttpStatusCode.BadRequest;
+                    case "application/json":
+                        try
+                        {
+                            InscriptionData inscr = JObject.Parse(id_json.Result).ToObject<InscriptionData>();
+                            return Post(inscr);
+                        }
+                        catch
+                        {
+                            httpResponseMessage.StatusCode = HttpStatusCode.BadRequest;
+                        }
+                        break;
+                    case "multipart/form-data":
+                        if (id.Content.Headers.ContentType.Parameters.Count == 0 ||
+                            id.Content.Headers.ContentType.Parameters.Count((x) => x.Name == "boundary") != 1)
+                        {
+                            httpResponseMessage.StatusCode = HttpStatusCode.NotAcceptable;
+                        }
+                        string[] boundary = new string[] { id.Content.Headers.ContentType.Parameters
+                                .Select((x) => new { x.Name, x.Value }).FirstOrDefault(x => x.Name == "boundary").Value};
+                        string[] parts = id_json.Result.Split(boundary, StringSplitOptions.RemoveEmptyEntries);
+                        
+                        break;
+                    default:
+                        break;
                 }
             }
             return httpResponseMessage;

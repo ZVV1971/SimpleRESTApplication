@@ -500,16 +500,16 @@
         </member>
         <member name="M:SimpleRESTApplication.Controllers.CertificatesController.Post(SimpleRESTApplication.Models.InscriptionData)">
             <summary>
-            
+            Gets data from the POST body as ww-form-urlencoded
             </summary>
-            <param name="id"></param>
+            <param name="id">x-ww-form-urlencoded request</param>
             <returns></returns>
         </member>
         <member name="M:SimpleRESTApplication.Controllers.CertificatesController.Post(System.Net.Http.HttpRequestMessage)">
             <summary>
-            
+            Gets data POSTed as JSON
             </summary>
-            <param name="id"></param>
+            <param name="id">JSON-formatted request</param>
             <returns><see cref="T:System.Net.Http.HttpResponseMessage"/></returns>
         </member>
         <member name="M:SimpleRESTApplication.Controllers.CertificatesController.GetFullPath(System.String@,System.Boolean@)">
