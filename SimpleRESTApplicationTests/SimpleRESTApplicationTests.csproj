@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="Controllers\CertificatesControllerTests.cs" />
     <Compile Include="Models\InscriptionDataTest.cs" />
+    <Compile Include="Models\ControllerTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

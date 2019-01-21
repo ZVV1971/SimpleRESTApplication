@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Hosting;
 using System.Web.Http;
+using System.Collections.Generic;
 
 namespace SimpleRESTApplication.Controllers
 {
@@ -19,63 +20,21 @@ namespace SimpleRESTApplication.Controllers
     /// </summary>
     public class CertificatesController : ApiController
     {
+        /// <summary>
+        /// Standard method to GET file using url-encoded parameters
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="pos"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
         [HttpGet]
         [ContentTypeRoute("api/certificates", "application/x-www-form-urlencoded")]  // need to add it to allow routing even if content type is not present since form-urlencoded is by default
         public HttpResponseMessage Get(string id, string pos = "", string name = "")
         {
-            HttpResponseMessage httpResponseMessage = null;
-
+            HttpResponseMessage httpResponseMessage = CheckSignature(Request.RequestUri.Query);
+            if (httpResponseMessage.StatusCode != HttpStatusCode.OK) return httpResponseMessage;
             Logger.WriteToLog("got id " + id + " - " + DateTime.Now.ToString());
-            bool needToRotate;
-            string file_path = GetFullPath(ref id, out needToRotate);
-
-            if (file_path != null)
-            {
-                try
-                {
-                    byte[] fileBytes = File.ReadAllBytes(file_path);
-                    using (MemoryStream dataStream = new MemoryStream(fileBytes),
-                                        outputStream = new MemoryStream())
-                    {
-                        httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK);
-                        if (pos != null && !pos.Equals(""))
-                        {
-                            if (name == null || name.Equals("")) throw new ArgumentNullException("name",
-                                    "Name cannot be empty when position provided");
-                            PdfInscriptor pdf = new PdfInscriptor(dataStream);
-                            pdf.MakeInscription("Копия верна" + Environment.NewLine + pos
-                                    + Environment.NewLine + Environment.NewLine + name, needToRotate);
-                            pdf.document.Save(outputStream, false);
-                            httpResponseMessage.Content = new ByteArrayContent(outputStream.ToArray());
-                        }
-                        else
-                        {
-                            httpResponseMessage.Content = new ByteArrayContent(dataStream.ToArray());
-                        }
-                    }
-                    httpResponseMessage.Content.Headers.ContentDisposition =
-                        new ContentDispositionHeaderValue("attachment");
-                    httpResponseMessage.Content.Headers.ContentDisposition.FileName = id + ".pdf";
-                    httpResponseMessage.Content.Headers.ContentType =
-                        new MediaTypeHeaderValue("application/pdf");
-                }
-                catch (Exception ex)
-                {
-                    httpResponseMessage = Request.CreateResponse(HttpStatusCode.NotFound);
-#if DEBUG
-                    httpResponseMessage.Content = new StringContent(ex.Message);
-#endif
-                    return httpResponseMessage;
-                }
-            }
-            else
-            {
-                httpResponseMessage = Request.CreateResponse(HttpStatusCode.NotFound);
-#if DEBUG
-                httpResponseMessage.Content = new StringContent(id);
-#endif
-            }
-            return httpResponseMessage;
+            return CreateResponse(id, pos, name);
         }
 
         /// <summary>
@@ -109,7 +68,10 @@ namespace SimpleRESTApplication.Controllers
         [HttpPost]
         public HttpResponseMessage Post([FromBody] InscriptionData id)
         {
-            return Get(id: id.id, pos: id.pos, name: id.name);
+            HttpResponseMessage httpResponseMessage = CheckSignature(Request.Content.ToString());
+            if (httpResponseMessage.StatusCode != HttpStatusCode.OK) return httpResponseMessage;
+            Logger.WriteToLog("got " + Request.Content.ToString());
+            return CreateResponse(id: id.id, pos: id.pos, name: id.name);
         }
 
         /// <summary>
@@ -135,8 +97,12 @@ namespace SimpleRESTApplication.Controllers
                     case "application/json":
                         try
                         {
+                            httpResponseMessage = CheckSignature(id_json.Result);
+                            if (httpResponseMessage.StatusCode != HttpStatusCode.OK) return httpResponseMessage;
+                            Logger.WriteToLog("got " + id_json);
+
                             InscriptionData inscr = JObject.Parse(id_json.Result).ToObject<InscriptionData>();
-                            return Post(inscr);
+                            return CreateResponse(id: inscr.id, pos: inscr.pos, name: inscr.name);
                         }
                         catch
                         {
@@ -149,9 +115,18 @@ namespace SimpleRESTApplication.Controllers
                         {
                             httpResponseMessage.StatusCode = HttpStatusCode.NotAcceptable;
                         }
-                        string[] boundary = new string[] { id.Content.Headers.ContentType.Parameters
-                                .Select((x) => new { x.Name, x.Value }).FirstOrDefault(x => x.Name == "boundary").Value};
-                        string[] parts = id_json.Result.Split(boundary, StringSplitOptions.RemoveEmptyEntries);
+                        string boundary=String.Empty;
+                        try
+                        {
+                            boundary = id.Content.Headers.ContentType.Parameters
+                                    .Select((x) => new { x.Name, x.Value })
+                                    .FirstOrDefault(x => x.Name == "boundary").Value;
+                        }
+                        catch
+                        {
+                            httpResponseMessage.StatusCode = HttpStatusCode.BadRequest;
+                        }
+                        string[] parts = id_json.Result.Split(new string[] { boundary }, StringSplitOptions.RemoveEmptyEntries);
                         
                         break;
                     default:
@@ -205,6 +180,96 @@ namespace SimpleRESTApplication.Controllers
                 catch { }
             }
             return realPath;
+        }
+
+        private HttpResponseMessage CreateResponse(string id, string pos, string name)
+        {
+            HttpResponseMessage httpResponseMessage = new HttpResponseMessage();
+            bool needToRotate;
+            string file_path = GetFullPath(ref id, out needToRotate);
+
+            if (file_path != null)
+            {
+                try
+                {
+                    byte[] fileBytes = File.ReadAllBytes(file_path);
+                    using (MemoryStream dataStream = new MemoryStream(fileBytes),
+                                        outputStream = new MemoryStream())
+                    {
+                        if (pos != null && !pos.Equals(""))
+                        {
+                            if (name == null || name.Equals("")) throw new ArgumentNullException("name",
+                                    "Name cannot be empty when position provided");
+                            PdfInscriptor pdf = new PdfInscriptor(dataStream);
+                            pdf.MakeInscription("Копия верна" + Environment.NewLine + pos
+                                    + Environment.NewLine + Environment.NewLine + name, needToRotate);
+                            pdf.document.Save(outputStream, false);
+                            httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK);
+                            httpResponseMessage.Content = new ByteArrayContent(outputStream.ToArray());
+                        }
+                        else
+                        {
+                            httpResponseMessage.Content = new ByteArrayContent(dataStream.ToArray());
+                        }
+                    }
+                    httpResponseMessage.Content.Headers.ContentDisposition =
+                        new ContentDispositionHeaderValue("attachment");
+                    httpResponseMessage.Content.Headers.ContentDisposition.FileName = id + ".pdf";
+                    httpResponseMessage.Content.Headers.ContentType =
+                        new MediaTypeHeaderValue("application/pdf");
+                }
+                catch (Exception ex)
+                {
+                    httpResponseMessage = Request.CreateResponse(HttpStatusCode.NotFound);
+#if DEBUG
+                    httpResponseMessage.Content = new StringContent(ex.Message);
+#endif
+                    return httpResponseMessage;
+                }
+            }
+            else
+            {
+                httpResponseMessage = Request.CreateResponse(HttpStatusCode.NotFound);
+#if DEBUG
+                httpResponseMessage.Content = new StringContent(id);
+#endif
+            }
+            return httpResponseMessage;
+        }
+
+        private HttpResponseMessage CheckSignature(string strToCheck)
+        {
+            HttpResponseMessage httpResponseMessage = new HttpResponseMessage();
+            IEnumerable<string> values;
+
+            if (!(Request.Headers.Contains("X-Signature") && Request.Headers.TryGetValues("X-Signature", out values)))
+            {
+                return httpResponseMessage = Request.CreateResponse(HttpStatusCode.BadRequest,
+                    "Dully signed responces only accepted");
+            }
+            else
+            {
+                try
+                {
+                    X509EncDec encDec = new X509EncDec(Properties.Settings.Default.X509Name);
+                    if (!encDec.VerifySignature(values.ToList()[0], strToCheck))
+                    {
+                        return httpResponseMessage = Request.CreateResponse(HttpStatusCode.BadRequest,
+                        "Bogus signature");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return httpResponseMessage = Request.CreateResponse(HttpStatusCode.BadRequest,
+                    "Error verifying the signature"
+#if DEBUG
+                    + Environment.NewLine + ex.Message
+#endif
+                    );
+                }
+            }
+            httpResponseMessage.StatusCode = HttpStatusCode.OK;
+            return httpResponseMessage;
         }
     }
 }

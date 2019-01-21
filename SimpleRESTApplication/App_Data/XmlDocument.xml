@@ -492,6 +492,15 @@
             Provides method to get certificates PDF with/without inscription
             </summary>
         </member>
+        <member name="M:SimpleRESTApplication.Controllers.CertificatesController.Get(System.String,System.String,System.String)">
+            <summary>
+            Standard method to GET file using url-encoded parameters
+            </summary>
+            <param name="id"></param>
+            <param name="pos"></param>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
         <member name="M:SimpleRESTApplication.Controllers.CertificatesController.Get">
             <summary>
             Returns welcome message. For test purproses only.
@@ -519,22 +528,6 @@
             <param name="fileName">a name of the certificate: <see cref="T:System.String"/></param>
             <param name="needToRotate">necessity to rotate defined on the base of the ceritificate type: <see cref="T:System.Boolean"/></param>
             <returns>absolute path to the certificate file</returns>
-        </member>
-        <member name="T:SimpleRESTApplication.Properties.Resources">
-            <summary>
-              Класс ресурса со строгой типизацией для поиска локализованных строк и т.д.
-            </summary>
-        </member>
-        <member name="P:SimpleRESTApplication.Properties.Resources.ResourceManager">
-            <summary>
-              Возвращает кэшированный экземпляр ResourceManager, использованный этим классом.
-            </summary>
-        </member>
-        <member name="P:SimpleRESTApplication.Properties.Resources.Culture">
-            <summary>
-              Перезаписывает свойство CurrentUICulture текущего потока для всех
-              обращений к ресурсу с помощью этого класса ресурса со строгой типизацией.
-            </summary>
         </member>
         <member name="M:PdfSharp.Pdf.IO.CompatiblePdfReader.Open(System.String,PdfSharp.Pdf.IO.PdfDocumentOpenMode)">
             <summary>

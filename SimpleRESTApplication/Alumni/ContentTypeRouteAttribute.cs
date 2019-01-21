@@ -2,10 +2,9 @@
 //Implementing a custom Route Attribute for Web API that considers Content-Type
 //https://massivescale.com/web-api-routing-by-content-type/
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-using System.Text;
 using System.Net.Http;
 using System.Web.Http.Routing;
 

@@ -34,11 +34,47 @@ namespace SimpleRESTApplication.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("This is the service for getting KML certificates. \nPlease, use it as follows: ~/a" +
-            "pi/certificates/?id=certificatenamme+date.")]
+        [global::System.Configuration.DefaultSettingValueAttribute("This is the service for getting KML certificates. \r\nPlease, use it as follows: ~/" +
+            "api/certificates/?id=certificatenamme+date.")]
         public string CertificatesGetTestResponse {
             get {
                 return ((string)(this["CertificatesGetTestResponse"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("KML-SERVER")]
+        public string X509Name {
+            get {
+                return ((string)(this["X509Name"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseFile {
+            get {
+                return ((bool)(this["UseFile"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("e:\\Users\\User\\source\\repos\\ZVV1971\\SimpleRESTApplication\\KML-SERVER.pfx")]
+        public string CertFileName {
+            get {
+                return ((string)(this["CertFileName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("jml421")]
+        public string CertPwd {
+            get {
+                return ((string)(this["CertPwd"]));
             }
         }
     }
